@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comparador de recibos | CCT 244/94</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--ink:#182230;--muted:#64748b;--line:#e5eaf1;--blue:#2457d6;--green:#16834a;--red:#c43d3d;--soft:#edf3ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+header{background:#101c35;color:white;padding:28px 20px}header .wrap,main{max-width:1120px;margin:auto}header p{color:#c5d0e2;margin:6px 0 0}h1{font-size:clamp(25px,4vw,36px);margin:0}h2{font-size:19px;margin:0 0 14px}h3{font-size:15px;margin:0 0 8px}
+main{padding:24px 18px 60px}.notice{background:#fff8e8;border:1px solid #f0d99c;color:#765313;padding:12px 14px;border-radius:12px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 3px 12px #15294b08}
+.upload{border:1.5px dashed #aab8cc;background:#f9fbff;border-radius:12px;padding:18px;text-align:center}.upload input{max-width:100%;margin-top:10px}
+.period{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}.file{font-size:13px;color:var(--muted);margin-top:8px;overflow-wrap:anywhere}
+button{border:0;border-radius:10px;padding:11px 16px;background:var(--blue);color:white;font-weight:700;cursor:pointer}button.secondary{background:#eaf0fb;color:#24447f}button:disabled{opacity:.5;cursor:wait}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.progress{height:7px;background:#e8edf5;border-radius:99px;overflow:hidden;margin-top:12px}.progress span{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0}.stat{background:#f8faff;border:1px solid var(--line);padding:14px;border-radius:12px}.stat small{display:block;color:var(--muted);font-weight:650}.stat strong{font-size:clamp(18px,3vw,25px);display:block;margin-top:4px}
+.positive{color:var(--green)}.negative{color:var(--red)}.muted{color:var(--muted)}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:650px}th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line);font-size:14px}th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;background:#fafbfd}td input{width:100%;min-width:95px;padding:7px;border:1px solid var(--line);border-radius:7px;font:inherit}td input.amount{text-align:right}.right{text-align:right}.pill{display:inline-block;padding:3px 8px;border-radius:99px;background:#edf2f8;font-size:12px;font-weight:700}.pill.up{background:#e6f6ed;color:#126b3b}.pill.down{background:#ffeded;color:#a52e2e}
+.explain{padding:13px 14px;border-radius:11px;background:#f7f9fc;border:1px solid var(--line);margin:9px 0}.explain b{display:block;margin-bottom:3px}.sliderbox{margin:16px 0;padding:14px;border-radius:12px;background:#f8faff}.sliderbox input{width:100%}.sliderlabels{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+.hidden{display:none!important}.foot{font-size:12px;color:var(--muted);margin-top:20px}.tag{font-size:11px;color:#35518a;background:#eaf0fb;padding:4px 7px;border-radius:6px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.card{padding:15px}main{padding:16px 12px 40px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>Comparador de recibos de sueldo</h1><p>Comparación clara de liquidaciones · Convenio de referencia CCT 244/94</p></div></header>
+<main>
+<div class="notice"><b>Privacidad:</b> los PDF se procesan en tu navegador. Esta versión no envía los recibos a un servidor. Antes de compartir capturas o resultados, ocultá nombre, CUIL, domicilio, CBU y otros datos personales.</div>
+<section class="grid">
+ <div class="card">
+  <div class="period">01 · Período anterior</div><h2>Recibo anterior</h2>
+  <div class="upload"><div>📄 Seleccioná el PDF anterior</div><input id="oldFile" type="file" accept="application/pdf"></div>
+  <div class="file" id="oldName">Ningún archivo seleccionado</div><div class="progress"><span id="oldProgress"></span></div><div class="muted" id="oldStatus" aria-live="polite">Esperando archivo.</div>
+ </div>
+ <div class="card">
+  <div class="period">02 · Período actual</div><h2>Recibo actual</h2>
+  <div class="upload"><div>📄 Seleccioná el PDF actual</div><input id="newFile" type="file" accept="application/pdf"></div>
+  <div class="file" id="newName">Ningún archivo seleccionado</div><div class="progress"><span id="newProgress"></span></div><div class="muted" id="newStatus" aria-live="polite">Esperando archivo.</div>
+ </div>
+</section>
+<div class="actions"><button id="compare" disabled>Comparar recibos</button><button class="secondary" id="demo">Ver ejemplo con los recibos cargados</button><button class="secondary" id="clear">Limpiar</button></div>
+<section id="results" class="hidden">
+ <div class="card">
+  <div class="period">03 · Resumen de la comparación</div><h2 id="headline">Resultado</h2>
+  <div class="stats">
+   <div class="stat"><small>Neto anterior</small><strong id="oldNet">—</strong></div>
+   <div class="stat"><small>Neto actual</small><strong id="newNet">—</strong></div>
+   <div class="stat"><small>Variación neta</small><strong id="netDiff">—</strong><small id="netPct"></small></div>
+  </div>
+  <div class="sliderbox"><b>Deslizá para alternar la vista del período</b><input id="periodSlider" type="range" min="0" max="100" value="100"><div class="sliderlabels"><span>Anterior</span><span id="sliderPeriod">Actual</span></div><div id="sliderSummary" class="muted"></div></div>
+ </div>
+ <div class="card" style="margin-top:16px"><h2>Detalle de conceptos</h2><p class="muted">Los importes detectados se pueden corregir manualmente antes de interpretar el resultado. Los conceptos ausentes se muestran como $0, pero pueden requerir revisión si el PDF no se leyó correctamente.</p><div class="table-wrap"><table><thead><tr><th>Concepto</th><th class="right">Anterior ($)</th><th class="right">Actual ($)</th><th class="right">Diferencia ($)</th><th>Variación</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+ <div class="card" style="margin-top:16px"><h2>¿Qué cambió y cómo se puede interpretar?</h2><div id="explanations"></div><p class="foot">Las explicaciones describen diferencias aritméticas. No determinan por sí solas la causa legal o convencional de un cambio. Para confirmar aumentos, porcentajes, adicionales y descuentos, hay que revisar el acuerdo salarial, la categoría, las novedades y las bases de cálculo aplicables al período.</p></div>
+ <div class="actions"><button class="secondary" id="print">Imprimir / Guardar como PDF</button></div>
+</section>
+<div class="foot">Prototipo inicial. La extracción automática puede variar según la calidad, el diseño y si el PDF contiene texto seleccionable o imágenes escaneadas. Revisá los importes detectados antes de usar el análisis.</div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}
+const $=id=>document.getElementById(id);
+let oldData=null,newData=null,oldText='',newText='';
+const fmt=n=>new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:2}).format(n||0);
+const num=s=>{if(typeof s==='number')return s;let t=String(s??'').replace(/[^\d,.-]/g,'').trim();if(!t)return 0;if(t.includes(',')&&t.includes('.'))t=t.replace(/\./g,'').replace(',','.');else if(t.includes(','))t=t.replace(',','.');return Number(t)||0};
+const moneyRE=/\$?\s*[\d.]+,\d{2}/g;
+const aliases=[
+ ['Sueldo básico',/rem\.?\s*b[aá]sic[ao]|sueldo\s*b[aá]sic[ao]|b[aá]sic[ao]/i],
+ ['Antigüedad',/antig[uü]edad/i],
+ ['Adicional asistencia y productividad',/adic\.?\s*asis|asistencia.*product|adic\.?\s*asist/i],
+ ['Bonificación proveeduría',/bonif\.?\s*proveedur[ií]a|bonific\.?\s*proveedur/i],
+ ['Adicional no remunerativo',/adic\.?\s*no\s*remun/i],
+ ['Antigüedad no remunerativa',/antig[uü]edad\s*nr/i],
+ ['Asistencia no remunerativa',/asis.*per.*nr|asis.*nr/i],
+ ['Plus feriado no remunerativo',/plus\s*feriado\s*nr/i],
+ ['Plus feriado',/plus\s*feriado/i],
+ ['Horas extras',/horas?\s*extras?|hs\.?\s*extras?/i],
+ ['Premios',/premio|productividad/i],
+ ['Jubilación',/jubilaci[oó]n/i],
+ ['Ley 19.032 / INSSJP',/ley\s*19\.?032|inssj?p/i],
+ ['Aporte sindical / solidaridad',/cta\.?\s*solidaridad|cuota\s*sindical|aporte\s*sindical/i],
+ ['Patrón cabotaje',/patr\.?\s*cabotaje/i],
+ ['Cuota ALL',/cuota\s*all/i],
+ ['ALL varios',/all\s*varios/i],
+ ['Bonificación proveeduría (descuento)',/bonific\.?\s*proveedur[ií]a/i]
+];
+function extractConcepts(text){
+ const out={}; const lines=text.split(/\n+/).map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean);
+ for(let i=0;i<lines.length;i++){
+  const line=lines[i];
+  for(const [name,re] of aliases){
+   if(re.test(line)){
+    const matches=line.match(moneyRE)||[];
+    let val=matches.length?num(matches[matches.length-1]):null;
+    if(val===null&&i+1<lines.length){const m=lines[i+1].match(moneyRE);if(m)val=num(m[m.length-1]);}
+    if(val!==null){if(name==='Plus feriado no remunerativo'&&out['Plus feriado no remunerativo']!==undefined){}else out[name]=val;}
+   }
+  }
+ }
+ // Totals are extracted separately from labeled lines, avoiding accidental use of the employer contribution total.
+ const findTotal=(patterns)=>{for(const line of lines){if(patterns.test(line)){const m=line.match(moneyRE);if(m)return num(m[m.length-1]);}}return null};
+ const net=findTotal(/neto\s*(a\s*cobrar|s)?|sueldo\s*neto/i);
+ const gross=findTotal(/sueldo\s*bruto/i);
+ if(net!==null)out.__neto=net;if(gross!==null)out.__bruto=gross;
+ return out;
+}
+async function readPdf(file,which){
+ if(!window.pdfjsLib){alert('No se pudo cargar el lector PDF. Revisá tu conexión a internet y volvé a intentar.');return}
+ const status=$(which+'Status'),bar=$(which+'Progress');status.textContent='Leyendo PDF…';bar.style.width='15%';
+ try{
+  const buf=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:buf}).promise;let text='';
+  for(let p=1;p<=pdf.numPages;p++){status.textContent=`Extrayendo texto: página ${p} de ${pdf.numPages}…`;const page=await pdf.getPage(p);const content=await page.getTextContent();const grouped={};for(const item of content.items){const y=Math.round(item.transform?.[5]||0);(grouped[y]??=[]).push(item.str)}text+=Object.keys(grouped).sort((a,b)=>Number(b)-Number(a)).map(y=>grouped[y].join(' ')).join('\\n')+'\\n';bar.style.width=(15+45*p/pdf.numPages)+'%';}
+  if(text.replace(/\s/g,'').length<80 && window.Tesseract){
+   status.textContent='PDF escaneado: aplicando reconocimiento OCR…';
+   const worker=await Tesseract.createWorker('spa'); 
+   for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p),vp=page.getViewport({scale:2}),canvas=document.createElement('canvas');canvas.width=vp.width;canvas.height=vp.height;await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;const r=await worker.recognize(canvas);text+='\n'+r.data.text;bar.style.width=(60+35*p/pdf.numPages)+'%';}
+   await worker.terminate();
+  }
+  const data=extractConcepts(text);
+  if(which==='old'){oldText=text;oldData=data}else{newText=text;newData=data}
+  status.textContent=`Lectura terminada. ${Object.keys(data).filter(k=>!k.startsWith('__')).length} conceptos reconocidos. Revisá los importes al comparar.`;
+  bar.style.width='100%';$('compare').disabled=!(oldData&&newData);
+ }catch(e){console.error(e);status.textContent='No se pudo leer el PDF. Probá con un PDF más nítido o cargá los datos manualmente.';bar.style.width='0%'}
+}
+$('oldFile').addEventListener('change',e=>{const f=e.target.files[0];if(f){$('oldName').textContent=f.name;readPdf(f,'old')}});
+$('newFile').addEventListener('change',e=>{const f=e.target.files[0];if(f){$('newName').textContent=f.name;readPdf(f,'new')}});
+function render(oldD,newD){
+ const keys=[...new Set([...Object.keys(oldD),...Object.keys(newD)])].filter(k=>!k.startsWith('__'));
+ const preferred=['Sueldo básico','Antigüedad','Adicional asistencia y productividad','Bonificación proveeduría','Adicional no remunerativo','Antigüedad no remunerativa','Asistencia no remunerativa','Plus feriado no remunerativo','Plus feriado','Horas extras','Premios','Jubilación','Ley 19.032 / INSSJP','Aporte sindical / solidaridad','Patrón cabotaje','Cuota ALL','ALL varios'];
+ keys.sort((a,b)=>{let x=preferred.indexOf(a),y=preferred.indexOf(b);return (x<0?99:x)-(y<0?99:y)});
+ const tbody=$('rows');tbody.innerHTML='';
+ keys.forEach((k,i)=>{let a=oldD[k]||0,b=newD[k]||0,d=b-a,tr=document.createElement('tr');tr.innerHTML=`<td><b>${k}</b></td><td><input class="amount edit-old" data-key="${encodeURIComponent(k)}" value="${a.toFixed(2)}"></td><td><input class="amount edit-new" data-key="${encodeURIComponent(k)}" value="${b.toFixed(2)}"></td><td class="right ${d>=0?'positive':'negative'}" id="diff-${i}">${fmt(d)}</td><td><span class="pill ${d>0?'up':d<0?'down':''}">${d>0?'Aumentó':d<0?'Disminuyó':'Sin cambio'}</span></td>`;tbody.appendChild(tr);});
+ document.querySelectorAll('.edit-old,.edit-new').forEach(inp=>inp.addEventListener('change',()=>{let key=decodeURIComponent(inp.dataset.key);(inp.classList.contains('edit-old')?oldData:newData)[key]=num(inp.value);render(oldData,newData)}));
+ const oldNet=oldD.__neto??estimateNet(oldD),newNet=newD.__neto??estimateNet(newD);
+ $('oldNet').textContent=fmt(oldNet);$('newNet').textContent=fmt(newNet);let diff=newNet-oldNet,pct=oldNet?diff/oldNet*100:0;
+ $('netDiff').textContent=(diff>=0?'+':'')+fmt(diff);$('netDiff').className=diff>=0?'positive':'negative';$('netPct').textContent=(diff>=0?'+':'')+pct.toFixed(2).replace('.',',')+'%';
+ $('headline').textContent=diff>0?'El neto a cobrar aumentó':diff<0?'El neto a cobrar disminuyó':'El neto a cobrar no tuvo variación';
+ const ex=$('explanations');ex.innerHTML='';
+ const changes=keys.map(k=>({k,a:oldD[k]||0,b:newD[k]||0,d:(newD[k]||0)-(oldD[k]||0)})).filter(x=>Math.abs(x.d)>.005);
+ if(!changes.length)ex.innerHTML='<p>No se detectaron diferencias en los conceptos reconocidos. Verificá que ambos PDF se hayan leído correctamente.</p>';
+ changes.sort((a,b)=>Math.abs(b.d)-Math.abs(a.d)).forEach(x=>{let div=document.createElement('div');div.className='explain';let state=x.d>0?'aumentó':'disminuyó';let hint=x.k.toLowerCase().includes('feriado')?'La diferencia puede estar relacionada con la cantidad de días u horas feriados liquidados. Revisá las unidades del recibo.':x.k==='Antigüedad'?'El importe cambió. Compará la base salarial, el porcentaje o tramo aplicado y la antigüedad reconocida.':x.k==='Sueldo básico'?'El básico es distinto entre períodos. Puede responder a una actualización de escala, categoría o jornada; confirmalo con la escala vigente.':x.k.includes('Jubilación')||x.k.includes('Ley 19')||x.k.includes('Aporte')||x.k.includes('Patrón')||x.k.includes('Cuota')?'Es un descuento/aporte. Revisá la base sobre la que se calculó, la alícuota y las reglas aplicables.':'El importe cambió entre períodos. Revisá la cantidad, la base de cálculo y las condiciones de liquidación de este concepto.';div.innerHTML=`<b>${x.k}: ${state} ${fmt(Math.abs(x.d))}</b><span>Anterior: ${fmt(x.a)} · Actual: ${fmt(x.b)}.</span><div class="muted" style="margin-top:5px">${hint}</div>`;ex.appendChild(div)});
+ $('results').classList.remove('hidden');updateSlider();
+}
+function estimateNet(d){let sum=0;for(const [k,v] of Object.entries(d)){if(!k.startsWith('__')&&!/jubilaci[oó]n|ley 19|aporte|solidaridad|patr[oó]n|cuota|all varios/i.test(k))sum+=v;}return sum}
+function updateSlider(){let v=+$('periodSlider').value,which=v<50?'Anterior':'Actual';$('sliderPeriod').textContent=which;$('sliderSummary').textContent=which==='Anterior'?'Estás visualizando los importes del recibo anterior.':'Estás visualizando los importes del recibo actual.'}
+$('periodSlider').addEventListener('input',updateSlider);
+$('compare').addEventListener('click',()=>render(oldData,newData));
+$('demo').addEventListener('click',()=>{
+ oldData={'Sueldo básico':1744113,'Antigüedad':392425.43,'Adicional asistencia y productividad':174411.30,'Bonificación proveeduría':52839.51,'Adicional no remunerativo':52323,'Antigüedad no remunerativa':11772.68,'Asistencia no remunerativa':5232.30,'Plus feriado no remunerativo':924.37,'Plus feriado':30812.66,'Jubilación':263406.21,'Ley 19.032 / INSSJP':71838.06,'Patrón cabotaje':73945.63,'Aporte sindical / solidaridad':49297.09,'Cuota ALL':2333,'ALL varios':325339,'Bonificación proveeduría (descuento)':42800,'__neto':1635895.26,'__bruto':2394601.90};
+ newData={'Sueldo básico':1925080,'Antigüedad':433143,'Adicional asistencia y productividad':192508,'Bonificación proveeduría':56790.12,'Plus feriado':17004.87,'Jubilación':288697.86,'Ley 19.032 / INSSJP':78735.78,'Patrón cabotaje':78735.78,'Aporte sindical / solidaridad':52490.52,'Cuota ALL':4733,'ALL varios':149161,'Bonificación proveeduría (descuento)':46000,'__neto':1925972.05,'__bruto':2624525.99};
+ $('oldName').textContent='Ejemplo: recibo mayo 2026';$('newName').textContent='Ejemplo: recibo agosto 2026';$('oldStatus').textContent='Datos de ejemplo cargados.';$('newStatus').textContent='Datos de ejemplo cargados.';$('compare').disabled=false;render(oldData,newData);
+});
+$('clear').addEventListener('click',()=>{oldData=newData=null;oldText=newText='';$('oldFile').value='';$('newFile').value='';$('oldName').textContent=$('newName').textContent='Ningún archivo seleccionado';$('oldStatus').textContent=$('newStatus').textContent='Esperando archivo.';$('oldProgress').style.width=$('newProgress').style.width='0';$('results').classList.add('hidden');$('compare').disabled=true});
+$('print').addEventListener('click',()=>window.print());
+</script>
+<style>@media print{header{background:#fff;color:#111;padding:10px 0}header p,.notice,.upload,.actions,.sliderbox,.foot{display:none!important}body{background:#fff}.card{box-shadow:none;break-inside:avoid}main{max-width:none;padding:0}.grid{display:none}#results{display:block!important}}</style>
+</body></html>
